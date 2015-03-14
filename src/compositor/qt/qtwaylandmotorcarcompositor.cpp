@@ -588,79 +588,80 @@ bool QtWaylandMotorcarCompositor::eventFilter(QObject *obj, QEvent *event)
             }
         }
         break;
-//    case QEvent::MouseButtonPress: {
-//        QPointF local;
-//        QMouseEvent *me = static_cast<QMouseEvent *>(event);
-//        QWaylandSurface *targetSurface = surfaceAt(me->localPos(), &local);
-//        if (m_dragKeyIsPressed && targetSurface) {
-//            m_draggingWindow = targetSurface;
-//            m_drag_diff = local;
-//        } else {
-//            if (targetSurface && input->keyboardFocus() != targetSurface) {
-//                input->setKeyboardFocus(targetSurface);
-//                //                m_surfaces.removeOne(targetSurface);
-//                //                m_surfaces.append(targetSurface);
-//                //m_renderScheduler.start(0);
-//            }
-//            input->sendMousePressEvent(me->button(), local, me->localPos());
-//        }
-//        return true;
-//    }
-//    case QEvent::MouseButtonRelease: {
-//        QWaylandSurface *targetSurface = input->mouseFocus();
-//        if (m_draggingWindow) {
-//            m_draggingWindow = 0;
-//            m_drag_diff = QPointF();
-//        } else {
-//            QMouseEvent *me = static_cast<QMouseEvent *>(event);
-//            QPointF localPos;
-//            if (targetSurface)
-//                localPos = toSurface(targetSurface, me->localPos());
-//            input->sendMouseReleaseEvent(me->button(), localPos, me->localPos());
-//        }
-//        return true;
-//    }
-//    case QEvent::MouseMove: {
-//        QMouseEvent *me = static_cast<QMouseEvent *>(event);
-//        if (m_draggingWindow) {
-//            m_draggingWindow->setPos(me->localPos() - m_drag_diff);
-//            //m_renderScheduler.start(0);
-//        } else {
-//            QPointF local;
-//            QWaylandSurface *targetSurface = surfaceAt(me->localPos(), &local);
-//            input->sendMouseMoveEvent(targetSurface, local, me->localPos());
-//        }
-//        break;
-//    }
-//    case QEvent::Wheel: {
-//        QWheelEvent *we = static_cast<QWheelEvent *>(event);
-//        input->sendMouseWheelEvent(we->orientation(), we->delta());
-//        break;
-//    }
+    case QEvent::MouseButtonPress: {
+        QPointF local;
+        QMouseEvent *me = static_cast<QMouseEvent *>(event);
+        QWaylandSurface *targetSurface = surfaceAt(me->localPos(), &local);
+        if (m_dragKeyIsPressed && targetSurface) {
+            m_draggingWindow = targetSurface;
+            m_drag_diff = local;
+        } else {
+            if (targetSurface && input->keyboardFocus() != targetSurface) {
+                input->setKeyboardFocus(targetSurface);
+                //                m_surfaces.removeOne(targetSurface);
+                //                m_surfaces.append(targetSurface);
+                //m_renderScheduler.start(0);
+            }
+            input->sendMousePressEvent(me->button(), local, me->localPos());
+        }
+        return true;
+    }
+    case QEvent::MouseButtonRelease: {
+        QWaylandSurface *targetSurface = input->mouseFocus();
+        if (m_draggingWindow) {
+            m_draggingWindow = 0;
+            m_drag_diff = QPointF();
+        } else {
+            QMouseEvent *me = static_cast<QMouseEvent *>(event);
+            QPointF localPos;
+            if (targetSurface)
+                localPos = toSurface(targetSurface, me->localPos());
+            input->sendMouseReleaseEvent(me->button(), localPos, me->localPos());
+        }
+        return true;
+    }
+    case QEvent::MouseMove: {
+        QMouseEvent *me = static_cast<QMouseEvent *>(event);
+        if (m_draggingWindow) {
+            m_draggingWindow->setPos(me->localPos() - m_drag_diff);
+            //m_renderScheduler.start(0);
+        } else {
+            QPointF local;
+            QWaylandSurface *targetSurface = surfaceAt(me->localPos(), &local);
+            input->sendMouseMoveEvent(targetSurface, local, me->localPos());
+        }
+        break;
+    }
+    case QEvent::Wheel: {
+        QWheelEvent *we = static_cast<QWheelEvent *>(event);
+        input->sendMouseWheelEvent(we->orientation(), we->delta());
+        break;
+    }
     case QEvent::KeyPress: {
         QKeyEvent *ke = static_cast<QKeyEvent *>(event);
-//        if (ke->key() == Qt::Key_Meta || ke->key() == Qt::Key_Super_L) {
-//            m_dragKeyIsPressed = true;
-//        }/*else if(ke->key() == Qt::Key_Up){
-//            m_glData->m_cameraNode->setTransform(glm::translate(glm::mat4(1), glm::vec3(0,0,0.001f)) * m_glData->m_cameraNode->transform());
-//        }else if(ke->key() == Qt::Key_Down){
-//            m_glData->m_cameraNode->setTransform(glm::translate(glm::mat4(1), glm::vec3(0,0,-0.001f)) * m_glData->m_cameraNode->transform());
-//        }*/
-//        m_modifiers = ke->modifiers();
-//        QWaylandSurface *targetSurface = input->keyboardFocus();
-//        if (targetSurface)
+        if (ke->key() == Qt::Key_Meta || ke->key() == Qt::Key_Super_L) {
+            std::cout << "DRAG KEY" << std::endl;
+            m_dragKeyIsPressed = true;
+        }/*else if(ke->key() == Qt::Key_Up){
+            m_glData->m_cameraNode->setTransform(glm::translate(glm::mat4(1), glm::vec3(0,0,0.001f)) * m_glData->m_cameraNode->transform());
+        }else if(ke->key() == Qt::Key_Down){
+            m_glData->m_cameraNode->setTransform(glm::translate(glm::mat4(1), glm::vec3(0,0,-0.001f)) * m_glData->m_cameraNode->transform());
+        }*/
+        m_modifiers = ke->modifiers();
+        QWaylandSurface *targetSurface = input->keyboardFocus();
+        if (targetSurface)
            // input->sendKeyPressEvent(ke->nativeScanCode());
           this->scene()->windowManager()->sendEvent(motorcar::KeyboardEvent(motorcar::KeyboardEvent::Event::KEY_PRESS, ke->nativeScanCode(), defaultSeat()));
           break;
     }
     case QEvent::KeyRelease: {
         QKeyEvent *ke = static_cast<QKeyEvent *>(event);
-//        if (ke->key() == Qt::Key_Meta || ke->key() == Qt::Key_Super_L) {
-//            m_dragKeyIsPressed = false;
-//        }
-//        m_modifiers = ke->modifiers();
-//        QWaylandSurface *targetSurface = input->keyboardFocus();
-//        if (targetSurface)
+        if (ke->key() == Qt::Key_Meta || ke->key() == Qt::Key_Super_L) {
+            m_dragKeyIsPressed = false;
+        }
+        m_modifiers = ke->modifiers();
+        QWaylandSurface *targetSurface = input->keyboardFocus();
+        if (targetSurface)
            // input->sendKeyReleaseEvent(ke->nativeScanCode());
         this->scene()->windowManager()->sendEvent(motorcar::KeyboardEvent(motorcar::KeyboardEvent::Event::KEY_RELEASE, ke->nativeScanCode(), defaultSeat()));
         break;

@@ -59,8 +59,10 @@ WaylandSurfaceNode *WindowManager::createSurface(WaylandSurface *surface)
     WaylandSurfaceNode *surfaceNode = this->getSurfaceNode(surface);
     if(surfaceNode==NULL){
         if(surface->isMotorcarSurface()){
+          std::cout << "MOTORCAR" << std::endl;
             surfaceNode = new MotorcarSurfaceNode(surface, this->scene());
         }else{
+          std::cout << "WAYLAND" << std::endl;
             surfaceNode = new WaylandSurfaceNode(surface, this->scene());
         }
         std::cout << "allocating surface node " << surfaceNode << " for surface " << surface <<std::endl;
@@ -227,6 +229,7 @@ void WindowManager::unmapSurface(WaylandSurface *surface)
 
 void WindowManager::sendEvent(const Event &event)
 {
+  std::cout << "WOOF" << std::endl;
     WaylandSurface *focus;
     switch(event.type()){
     case Event::EventType::MOUSE:

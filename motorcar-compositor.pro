@@ -26,6 +26,9 @@ INCLUDEPATH += $$MOTORCAR_PROTOCOL_PATH
 HEADERS += $$MOTORCAR_PROTOCOL_PATH/motorcar-server-protocol.h
 SOURCES += $$MOTORCAR_PROTOCOL_PATH/motorcar-wayland-extensions.c
 
+HEADERS += $$MOTORCAR_PROTOCOL_PATH/xdg-shell-server-protocol.h
+SOURCES += $$MOTORCAR_PROTOCOL_PATH/xdg-shell-protocol.c
+
 DESTDIR = lib
 OBJECTS_DIR = lib/.obj
 MOC_DIR = lib/.moc
