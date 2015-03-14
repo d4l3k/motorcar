@@ -37,6 +37,7 @@
 
 
 
+
 using namespace motorcar;
 WindowManager::WindowManager(Scene *scene, Seat *defaultSeat)
     :m_numSurfacesMapped(0)
@@ -123,8 +124,8 @@ WaylandSurfaceNode *WindowManager::mapSurface(motorcar::WaylandSurface *surface,
     int type = static_cast<int>(surfaceType);
     float popupZOffset = 0.05f;
 
-    float zOffset = -1.5f;
-    float thetaOffset = -30.0f;
+    float zOffset = -0.0f;
+    float thetaOffset = 0.0f;
 
 
     if(surface->isMotorcarSurface()){
@@ -198,7 +199,21 @@ WaylandSurfaceNode *WindowManager::mapSurface(motorcar::WaylandSurface *surface,
             this->defaultSeat()->setPointerFocus(surfaceNode->surface(), glm::vec2());
         }
     }else{
+        std::cout << "mapped surfaceNode other type"<< std::endl;
+        surfaceNode->setParentNode(this->scene());
+//        surfaceNode->setTransform(glm::mat4(1)
+//                      //  * glm::rotate(glm::mat4(1), -90.f, glm::vec3(0, 1, 0))
+//                        * glm::translate(glm::mat4(1), glm::vec3(0, 0 ,1.25f))
+//                       // * glm::rotate(glm::mat4(1), (-1 +  m_numSurfacesMapped % 3) * 30.f, glm::vec3(0, -1, 0))
+//                    //* glm::rotate(glm::mat4(1),  (-1 + m_numSurfacesMapped / 3) * 30.f, glm::vec3(-1, 0, 0))
+//                    * glm::translate(glm::mat4(1), glm::vec3(0,0.0,-1.5f))
+//                    * glm::mat4(1));
+        surfaceNode->setTransform(glm::mat4(1) * glm::rotate(glm::mat4(4), -45.f, glm::vec3(0, 0, 0)));
 
+       // surfaceNode->setTransform(glm::mat4());
+        m_numSurfacesMapped ++;
+
+        this->defaultSeat()->setPointerFocus(surfaceNode->surface(), glm::vec2());
     }
 
     //WaylandSurfaceNode *surfaceNode = new WaylandSurfaceNode(surface, parentNode, transform);
@@ -206,7 +221,7 @@ WaylandSurfaceNode *WindowManager::mapSurface(motorcar::WaylandSurface *surface,
     //this creates a new surface if needed but otherwise gives us the associated surface
 
 
-    std::cout << "mapped surfaceNode " << surfaceNode << std::endl;
+    std::cout << "mapped surfaceNode " << surfaceNode << " type " << type << std::endl;
 
 
 

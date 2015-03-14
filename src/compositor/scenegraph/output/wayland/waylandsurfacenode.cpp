@@ -167,6 +167,7 @@ bool WaylandSurfaceNode::computeLocalSurfaceIntersection(const Geometry::Ray &lo
     glm::vec3 coords= intersection * glm::vec3(m_surface->size().x, m_surface->size().y, 0);
     localIntersection =  glm::vec2(coords);
 
+
     return t >= 0;
 }
 
@@ -183,7 +184,6 @@ Geometry::RaySurfaceIntersection *WaylandSurfaceNode::intersectWithSurfaces(cons
     float t;
     glm::vec2 localIntersection;
     bool isIntersected = computeLocalSurfaceIntersection(localRay, localIntersection, t);
-
 
     if(isIntersected && (closestSubtreeIntersection == NULL || t < closestSubtreeIntersection-> t)
             && localIntersection.x >= 0 && localIntersection.x <= m_surface->size().x

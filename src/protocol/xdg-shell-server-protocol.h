@@ -1,9 +1,9 @@
-/* 
+/*
  * Copyright © 2008-2013 Kristian Høgsberg
  * Copyright © 2013      Rafael Antognolli
  * Copyright © 2013      Jasper St. Pierre
  * Copyright © 2010-2013 Intel Corporation
- * 
+ *
  * Permission to use, copy, modify, distribute, and sell this
  * software and its documentation for any purpose is hereby granted
  * without fee, provided that the above copyright notice appear in
@@ -15,7 +15,7 @@
  * representations about the suitability of this software for any
  * purpose.  It is provided "as is" without express or implied
  * warranty.
- * 
+ *
  * THE COPYRIGHT HOLDERS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
  * SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
  * FITNESS, IN NO EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY
@@ -59,7 +59,7 @@ extern const struct wl_interface xdg_popup_interface;
  * static_assert to ensure the protocol and implementation versions match.
  */
 enum xdg_shell_version {
-	XDG_SHELL_VERSION_CURRENT = 5,
+	XDG_SHELL_VERSION_CURRENT = 4,
 };
 #endif /* XDG_SHELL_VERSION_ENUM */
 
@@ -72,30 +72,17 @@ enum xdg_shell_error {
 
 /**
  * xdg_shell - create desktop-style surfaces
- * @destroy: destroy xdg_shell
  * @use_unstable_version: enable use of this unstable version
  * @get_xdg_surface: create a shell surface from a surface
- * @get_xdg_popup: create a popup for a surface
+ * @get_xdg_popup: create a shell surface from a surface
  * @pong: respond to a ping event
  *
- * xdg_shell allows clients to turn a wl_surface into a "real window"
- * which can be dragged, resized, stacked, and moved around by the user.
- * Everything about this interface is suited towards traditional desktop
- * environments.
+ * This interface is implemented by servers that provide desktop-style
+ * user interfaces.
+ *
+ * It allows clients to associate a xdg_surface with a basic surface.
  */
 struct xdg_shell_interface {
-	/**
-	 * destroy - destroy xdg_shell
-	 *
-	 * Destroy this xdg_shell object.
-	 *
-	 * Destroying a bound xdg_shell object while there are surfaces
-	 * still alive with roles from this interface is illegal and will
-	 * result in a protocol error. Make sure to destroy all surfaces
-	 * before destroying this object.
-	 */
-	void (*destroy)(struct wl_client *client,
-			struct wl_resource *resource);
 	/**
 	 * use_unstable_version - enable use of this unstable version
 	 * @version: (none)
@@ -114,30 +101,36 @@ struct xdg_shell_interface {
 	 * @id: (none)
 	 * @surface: (none)
 	 *
-	 * This creates an xdg_surface for the given surface and gives it
-	 * the xdg_surface role. See the documentation of xdg_surface for
-	 * more details.
+	 * Create a shell surface for an existing surface.
+	 *
+	 * This request gives the surface the role of xdg_surface. If the
+	 * surface already has another role, it raises a protocol error.
+	 *
+	 * Only one shell or popup surface can be associated with a given
+	 * surface.
 	 */
 	void (*get_xdg_surface)(struct wl_client *client,
 				struct wl_resource *resource,
 				uint32_t id,
 				struct wl_resource *surface);
 	/**
-	 * get_xdg_popup - create a popup for a surface
+	 * get_xdg_popup - create a shell surface from a surface
 	 * @id: (none)
 	 * @surface: (none)
 	 * @parent: (none)
-	 * @seat: the wl_seat of the user event
-	 * @serial: the serial of the user event
+	 * @seat: the wl_seat whose pointer is used
+	 * @serial: serial of the implicit grab on the pointer
 	 * @x: (none)
 	 * @y: (none)
+	 * @flags: (none)
 	 *
-	 * This creates an xdg_popup for the given surface and gives it
-	 * the xdg_popup role. See the documentation of xdg_popup for more
-	 * details.
+	 * Create a popup surface for an existing surface.
 	 *
-	 * This request must be used in response to some sort of user
-	 * action like a button press, key press, or touch down event.
+	 * This request gives the surface the role of xdg_popup. If the
+	 * surface already has another role, it raises a protocol error.
+	 *
+	 * Only one shell or popup surface can be associated with a given
+	 * surface.
 	 */
 	void (*get_xdg_popup)(struct wl_client *client,
 			      struct wl_resource *resource,
@@ -147,7 +140,8 @@ struct xdg_shell_interface {
 			      struct wl_resource *seat,
 			      uint32_t serial,
 			      int32_t x,
-			      int32_t y);
+			      int32_t y,
+			      uint32_t flags);
 	/**
 	 * pong - respond to a ping event
 	 * @serial: serial of the ping event
@@ -238,11 +232,11 @@ enum xdg_surface_state {
 #endif /* XDG_SURFACE_STATE_ENUM */
 
 /**
- * xdg_surface - A desktop window
- * @destroy: Destroy the xdg_surface
- * @set_parent: set the parent of this surface
+ * xdg_surface - desktop-style metadata interface
+ * @destroy: remove xdg_surface interface
+ * @set_parent: surface is a child of another surface
  * @set_title: set surface title
- * @set_app_id: set application ID
+ * @set_app_id: set surface class
  * @show_window_menu: show the window menu
  * @move: start an interactive move
  * @resize: start an interactive resize
@@ -252,7 +246,7 @@ enum xdg_surface_state {
  * @unset_maximized: (none)
  * @set_fullscreen: set the window as fullscreen on a monitor
  * @unset_fullscreen: (none)
- * @set_minimized: set the window as minimized
+ * @set_minimized: (none)
  *
  * An interface that may be implemented by a wl_surface, for
  * implementations that provide a desktop-style user interface.
@@ -260,28 +254,30 @@ enum xdg_surface_state {
  * It provides requests to treat surfaces like windows, allowing to set
  * properties like maximized, fullscreen, minimized, and to move and resize
  * them, and associate metadata like title and app id.
+ *
+ * On the server side the object is automatically destroyed when the
+ * related wl_surface is destroyed. On client side, xdg_surface.destroy()
+ * must be called before destroying the wl_surface object.
  */
 struct xdg_surface_interface {
 	/**
-	 * destroy - Destroy the xdg_surface
+	 * destroy - remove xdg_surface interface
 	 *
-	 * Unmap and destroy the window. The window will be effectively
-	 * hidden from the user's point of view, and all state like
-	 * maximization, fullscreen, and so on, will be lost.
+	 * The xdg_surface interface is removed from the wl_surface
+	 * object that was turned into a xdg_surface with
+	 * xdg_shell.get_xdg_surface request. The xdg_surface properties,
+	 * like maximized and fullscreen, are lost. The wl_surface loses
+	 * its role as a xdg_surface. The wl_surface is unmapped.
 	 */
 	void (*destroy)(struct wl_client *client,
 			struct wl_resource *resource);
 	/**
-	 * set_parent - set the parent of this surface
+	 * set_parent - surface is a child of another surface
 	 * @parent: (none)
 	 *
-	 * Set the "parent" of this surface. This window should be
-	 * stacked above a parent. The parent surface must be mapped as
-	 * long as this surface is mapped.
-	 *
-	 * Parent windows should be set on dialogs, toolboxes, or other
-	 * "auxilliary" surfaces, so that the parent is raised when the
-	 * dialog is raised.
+	 * Child surfaces are stacked above their parents, and will be
+	 * unmapped if the parent is unmapped too. They should not appear
+	 * on task bars and alt+tab.
 	 */
 	void (*set_parent)(struct wl_client *client,
 			   struct wl_resource *resource,
@@ -302,29 +298,24 @@ struct xdg_surface_interface {
 			  struct wl_resource *resource,
 			  const char *title);
 	/**
-	 * set_app_id - set application ID
+	 * set_app_id - set surface class
 	 * @app_id: (none)
 	 *
-	 * Set an application identifier for the surface.
+	 * Set an id for the surface.
 	 *
-	 * The app ID identifies the general class of applications to which
-	 * the surface belongs. The compositor can use this to group
-	 * multiple applications together, or to determine how to launch a
-	 * new application.
+	 * The app id identifies the general class of applications to which
+	 * the surface belongs.
 	 *
-	 * See the desktop-entry specification [0] for more details on
-	 * application identifiers and how they relate to well-known DBus
-	 * names and .desktop files.
-	 *
-	 * [0] http://standards.freedesktop.org/desktop-entry-spec/
+	 * It should be the ID that appears in the new desktop entry
+	 * specification, the interface name.
 	 */
 	void (*set_app_id)(struct wl_client *client,
 			   struct wl_resource *resource,
 			   const char *app_id);
 	/**
 	 * show_window_menu - show the window menu
-	 * @seat: the wl_seat of the user event
-	 * @serial: the serial of the user event
+	 * @seat: the seat to pop the window up on
+	 * @serial: serial of the event to pop up the window for
 	 * @x: the x position to pop up the window menu at
 	 * @y: the y position to pop up the window menu at
 	 *
@@ -334,12 +325,11 @@ struct xdg_surface_interface {
 	 * the window.
 	 *
 	 * This request asks the compositor to pop up such a window menu at
-	 * the given position, relative to the local surface coordinates of
-	 * the parent surface. There are no guarantees as to what menu
-	 * items the window menu contains.
+	 * the given position, relative to the parent surface. There are no
+	 * guarantees as to what the window menu contains.
 	 *
-	 * This request must be used in response to some sort of user
-	 * action like a button press, key press, or touch down event.
+	 * Your surface must have focus on the seat passed in to pop up the
+	 * window menu.
 	 */
 	void (*show_window_menu)(struct wl_client *client,
 				 struct wl_resource *resource,
@@ -349,14 +339,12 @@ struct xdg_surface_interface {
 				 int32_t y);
 	/**
 	 * move - start an interactive move
-	 * @seat: the wl_seat of the user event
-	 * @serial: the serial of the user event
+	 * @seat: the wl_seat whose pointer is used
+	 * @serial: serial of the implicit grab on the pointer
 	 *
-	 * Start an interactive, user-driven move of the surface.
+	 * Start a pointer-driven move of the surface.
 	 *
-	 * This request must be used in response to some sort of user
-	 * action like a button press, key press, or touch down event.
-	 *
+	 * This request must be used in response to a button press event.
 	 * The server may ignore move requests depending on the state of
 	 * the surface (e.g. fullscreen or maximized).
 	 */
@@ -366,15 +354,13 @@ struct xdg_surface_interface {
 		     uint32_t serial);
 	/**
 	 * resize - start an interactive resize
-	 * @seat: the wl_seat of the user event
-	 * @serial: the serial of the user event
+	 * @seat: the wl_seat whose pointer is used
+	 * @serial: serial of the implicit grab on the pointer
 	 * @edges: which edge or corner is being dragged
 	 *
-	 * Start a user-driven, interactive resize of the surface.
+	 * Start a pointer-driven resizing of the surface.
 	 *
-	 * This request must be used in response to some sort of user
-	 * action like a button press, key press, or touch down event.
-	 *
+	 * This request must be used in response to a button press event.
 	 * The server may ignore resize requests depending on the state of
 	 * the surface (e.g. fullscreen or maximized).
 	 */
@@ -385,19 +371,15 @@ struct xdg_surface_interface {
 		       uint32_t edges);
 	/**
 	 * ack_configure - ack a configure event
-	 * @serial: the serial from the configure event
+	 * @serial: a serial to configure for
 	 *
-	 * When a configure event is received, if a client commits the
-	 * surface in response to the configure event, then the client must
-	 * make a ack_configure request before the commit request, passing
-	 * along the serial of the configure event.
+	 * When a configure event is received, a client should then ack
+	 * it using the ack_configure request to ensure that the compositor
+	 * knows the client has seen the event.
 	 *
-	 * The compositor might use this information to move a surface to
-	 * the top left only when the client has drawn itself for the
-	 * maximized or fullscreen state.
-	 *
-	 * If the client receives multiple configure events before it can
-	 * respond to one, it only has to ack the last configure event.
+	 * By this point, the state is confirmed, and the next attach
+	 * should contain the buffer drawn for the configure event you are
+	 * acking.
 	 */
 	void (*ack_configure)(struct wl_client *client,
 			      struct wl_resource *resource,
@@ -414,20 +396,15 @@ struct xdg_surface_interface {
 	 * invisible portions like drop-shadows which should be ignored for
 	 * the purposes of aligning, placing and constraining windows.
 	 *
-	 * Once the window geometry of the surface is set once, it is not
-	 * possible to unset it, and it will remain the same until
-	 * set_window_geometry is called again, even if a new subsurface or
-	 * buffer is attached.
-	 *
-	 * If never set, the value is the full bounds of the surface,
-	 * including any subsurfaces. This updates dynamically on every
-	 * commit. This unset mode is meant for extremely simple clients.
+	 * The default value is the full bounds of the surface, including
+	 * any subsurfaces. Once the window geometry of the surface is set
+	 * once, it is not possible to unset it, and it will remain the
+	 * same until set_window_geometry is called again, even if a new
+	 * subsurface or buffer is attached.
 	 *
 	 * If responding to a configure event, the window geometry in here
 	 * must respect the sizing negotiations specified by the states in
 	 * the configure event.
-	 *
-	 * The width and height must be greater than zero.
 	 */
 	void (*set_window_geometry)(struct wl_client *client,
 				    struct wl_resource *resource,
@@ -464,16 +441,7 @@ struct xdg_surface_interface {
 	void (*unset_fullscreen)(struct wl_client *client,
 				 struct wl_resource *resource);
 	/**
-	 * set_minimized - set the window as minimized
-	 *
-	 * Request that the compositor minimize your surface. There is no
-	 * way to know if the surface is currently minimized, nor is there
-	 * any way to unset minimization on this surface.
-	 *
-	 * If you are looking to throttle redrawing when minimized, please
-	 * instead use the wl_surface.frame event for this, as this will
-	 * also work with live previews on windows in Alt-Tab, Expose or
-	 * similar compositor features.
+	 * set_minimized - (none)
 	 */
 	void (*set_minimized)(struct wl_client *client,
 			      struct wl_resource *resource);
@@ -497,74 +465,38 @@ xdg_surface_send_close(struct wl_resource *resource_)
 	wl_resource_post_event(resource_, XDG_SURFACE_CLOSE);
 }
 
-#ifndef XDG_POPUP_ERROR_ENUM
-#define XDG_POPUP_ERROR_ENUM
 /**
- * xdg_popup_error - xdg_popup error values
- * @XDG_POPUP_ERROR_NOT_THE_TOPMOST_POPUP: The client tried to map or
- *	destroy a non-topmost popup
- * @XDG_POPUP_ERROR_INVALID_PARENT: The client specified an invalid
- *	parent surface
+ * xdg_popup - desktop-style metadata interface
+ * @destroy: remove xdg_surface interface
  *
- * These errors can be emitted in response to xdg_popup requests.
- */
-enum xdg_popup_error {
-	XDG_POPUP_ERROR_NOT_THE_TOPMOST_POPUP = 0,
-	XDG_POPUP_ERROR_INVALID_PARENT = 1,
-};
-#endif /* XDG_POPUP_ERROR_ENUM */
-
-/**
- * xdg_popup - short-lived, popup surfaces for menus
- * @destroy: remove xdg_popup interface
+ * An interface that may be implemented by a wl_surface, for
+ * implementations that provide a desktop-style popups/menus. A popup
+ * surface is a transient surface with an added pointer grab.
  *
- * A popup surface is a short-lived, temporary surface that can be used
- * to implement menus. It takes an explicit grab on the surface that will
- * be dismissed when the user dismisses the popup. This can be done by the
- * user clicking outside the surface, using the keyboard, or even locking
- * the screen through closing the lid or a timeout.
+ * An existing implicit grab will be changed to owner-events mode, and the
+ * popup grab will continue after the implicit grab ends (i.e. releasing
+ * the mouse button does not cause the popup to be unmapped).
  *
- * When the popup is dismissed, a popup_done event will be sent out, and at
- * the same time the surface will be unmapped. The xdg_popup object is now
- * inert and cannot be reactivated, so clients should destroy it.
- * Explicitly destroying the xdg_popup object will also dismiss the popup
- * and unmap the surface.
+ * The popup grab continues until the window is destroyed or a mouse button
+ * is pressed in any other clients window. A click in any of the clients
+ * surfaces is reported as normal, however, clicks in other clients
+ * surfaces will be discarded and trigger the callback.
  *
- * Clients will receive events for all their surfaces during this grab
- * (which is an "owner-events" grab in X11 parlance). This is done so that
- * users can navigate through submenus and other "nested" popup windows
- * without having to dismiss the topmost popup.
+ * The x and y arguments specify the locations of the upper left corner of
+ * the surface relative to the upper left corner of the parent surface, in
+ * surface local coordinates.
  *
- * Clients that want to dismiss the popup when another surface of their own
- * is clicked should dismiss the popup using the destroy request.
- *
- * The parent surface must have either an xdg_surface or xdg_popup role.
- *
- * Specifying an xdg_popup for the parent means that the popups are nested,
- * with this popup now being the topmost popup. Nested popups must be
- * destroyed in the reverse order they were created in, e.g. the only popup
- * you are allowed to destroy at all times is the topmost one.
- *
- * If there is an existing popup when creating a new popup, the parent must
- * be the current topmost popup.
- *
- * A parent surface must be mapped before the new popup is mapped.
- *
- * When compositors choose to dismiss a popup, they will likely dismiss
- * every nested popup as well.
- *
- * The x and y arguments specify where the top left of the popup should be
- * placed, relative to the local surface coordinates of the parent surface.
+ * xdg_popup surfaces are always transient for another surface.
  */
 struct xdg_popup_interface {
 	/**
-	 * destroy - remove xdg_popup interface
+	 * destroy - remove xdg_surface interface
 	 *
-	 * This destroys the popup. Explicitly destroying the xdg_popup
-	 * object will also dismiss the popup, and unmap the surface.
-	 *
-	 * If this xdg_popup is not the "topmost" popup, a protocol error
-	 * will be sent.
+	 * The xdg_surface interface is removed from the wl_surface
+	 * object that was turned into a xdg_surface with
+	 * xdg_shell.get_xdg_surface request. The xdg_surface properties,
+	 * like maximized and fullscreen, are lost. The wl_surface loses
+	 * its role as a xdg_surface. The wl_surface is unmapped.
 	 */
 	void (*destroy)(struct wl_client *client,
 			struct wl_resource *resource);
@@ -575,9 +507,9 @@ struct xdg_popup_interface {
 #define XDG_POPUP_POPUP_DONE_SINCE_VERSION	1
 
 static inline void
-xdg_popup_send_popup_done(struct wl_resource *resource_)
+xdg_popup_send_popup_done(struct wl_resource *resource_, uint32_t serial)
 {
-	wl_resource_post_event(resource_, XDG_POPUP_POPUP_DONE);
+	wl_resource_post_event(resource_, XDG_POPUP_POPUP_DONE, serial);
 }
 
 #ifdef  __cplusplus

@@ -67,6 +67,7 @@ public:
 
     wl_resource *resource() const;
     void configureResource(struct wl_client *client, uint32_t id);
+    void configureResourceXDG(struct wl_client *client, uint32_t id);
 
 private:
     bool computeLocalSurfaceIntersection(const Geometry::Ray &localRay, glm::vec2 &localIntersection,  float &t) override;

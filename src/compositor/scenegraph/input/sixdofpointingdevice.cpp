@@ -49,7 +49,7 @@ SixDOFPointingDevice::SixDOFPointingDevice(Seat *seat, PhysicalNode *parent, con
     ,m_grabbedSurfaceNode(NULL)
     ,m_grabbedSurfaceNodeTransform()
     ,m_sixDofFocus(NULL)
-{ 
+{
     float vertices[]= {
         -0.05f, 0.0f, 0.0f,
         0.05f, 0.0f, 0.0f,
@@ -230,7 +230,7 @@ void SixDOFPointingDevice::sixDofPointerEvent(MotorcarSurfaceNode *surfaceNode, 
         break;
     case(MouseEvent::Event::MOVE):
         motorcar_six_dof_pointer_send_motion(sixDofResource, time, &m_positionArray, &m_orientationArray);
-        break;    
+        break;
     case(MouseEvent::Event::ENTER):
         motorcar_six_dof_pointer_send_enter(sixDofResource, serial, motorcarSurfaceResource, &m_positionArray, &m_orientationArray);
         break;

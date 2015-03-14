@@ -354,10 +354,10 @@ void MotorcarSurfaceNode::clipWindowBounds(Display *display)
 
 void MotorcarSurfaceNode::draw(Scene *scene, Display *display)
 {
-    
+
     glEnable(GL_STENCIL_TEST);
     //glDisable(GL_STENCIL_TEST);
-    
+
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, display->scratchFrameBuffer());
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glClearDepth(1.0);
@@ -506,6 +506,215 @@ const static struct motorcar_surface_interface motorcarSurfaceInterface = {
     MotorcarSurfaceNode::handle_set_size_3d
 };
 
+	/**
+	 * destroy - remove xdg_surface interface
+	 *
+	 * The xdg_surface interface is removed from the wl_surface
+	 * object that was turned into a xdg_surface with
+	 * xdg_shell.get_xdg_surface request. The xdg_surface properties,
+	 * like maximized and fullscreen, are lost. The wl_surface loses
+	 * its role as a xdg_surface. The wl_surface is unmapped.
+	 */
+	void xdg_destroy(struct wl_client *client,
+			struct wl_resource *resource)
+  {
+    std::cout << "XDG_SURFACE DESTROY" << std::endl;
+  }
+	/**
+	 * set_parent - surface is a child of another surface
+	 * @parent: (none)
+	 *
+	 * Child surfaces are stacked above their parents, and will be
+	 * unmapped if the parent is unmapped too. They should not appear
+	 * on task bars and alt+tab.
+	 */
+	void xdg_set_parent(struct wl_client *client,
+			   struct wl_resource *resource,
+			   struct wl_resource *parent)
+  {
+    std::cout << "XDG_SURFACE set parent" << std::endl;
+  }
+	/**
+	 * set_title - set surface title
+	 * @title: (none)
+	 *
+	 * Set a short title for the surface.
+	 *
+	 * This string may be used to identify the surface in a task bar,
+	 * window list, or other user interface elements provided by the
+	 * compositor.
+	 *
+	 * The string must be encoded in UTF-8.
+	 */
+	void xdg_set_title(struct wl_client *client,
+			  struct wl_resource *resource,
+			  const char *title){}
+	/**
+	 * set_app_id - set surface class
+	 * @app_id: (none)
+	 *
+	 * Set an id for the surface.
+	 *
+	 * The app id identifies the general class of applications to which
+	 * the surface belongs.
+	 *
+	 * It should be the ID that appears in the new desktop entry
+	 * specification, the interface name.
+	 */
+	void xdg_set_app_id(struct wl_client *client,
+			   struct wl_resource *resource,
+			   const char *app_id){}
+	/**
+	 * show_window_menu - show the window menu
+	 * @seat: the seat to pop the window up on
+	 * @serial: serial of the event to pop up the window for
+	 * @x: the x position to pop up the window menu at
+	 * @y: the y position to pop up the window menu at
+	 *
+	 * Clients implementing client-side decorations might want to
+	 * show a context menu when right-clicking on the decorations,
+	 * giving the user a menu that they can use to maximize or minimize
+	 * the window.
+	 *
+	 * This request asks the compositor to pop up such a window menu at
+	 * the given position, relative to the parent surface. There are no
+	 * guarantees as to what the window menu contains.
+	 *
+	 * Your surface must have focus on the seat passed in to pop up the
+	 * window menu.
+	 */
+	void xdg_show_window_menu(struct wl_client *client,
+				 struct wl_resource *resource,
+				 struct wl_resource *seat,
+				 uint32_t serial,
+				 int32_t x,
+				 int32_t y){}
+	/**
+	 * move - start an interactive move
+	 * @seat: the wl_seat whose pointer is used
+	 * @serial: serial of the implicit grab on the pointer
+	 *
+	 * Start a pointer-driven move of the surface.
+	 *
+	 * This request must be used in response to a button press event.
+	 * The server may ignore move requests depending on the state of
+	 * the surface (e.g. fullscreen or maximized).
+	 */
+	void xdg_move(struct wl_client *client,
+		     struct wl_resource *resource,
+		     struct wl_resource *seat,
+		     uint32_t serial){}
+	/**
+	 * resize - start an interactive resize
+	 * @seat: the wl_seat whose pointer is used
+	 * @serial: serial of the implicit grab on the pointer
+	 * @edges: which edge or corner is being dragged
+	 *
+	 * Start a pointer-driven resizing of the surface.
+	 *
+	 * This request must be used in response to a button press event.
+	 * The server may ignore resize requests depending on the state of
+	 * the surface (e.g. fullscreen or maximized).
+	 */
+	void xdg_resize(struct wl_client *client,
+		       struct wl_resource *resource,
+		       struct wl_resource *seat,
+		       uint32_t serial,
+		       uint32_t edges){}
+	/**
+	 * ack_configure - ack a configure event
+	 * @serial: a serial to configure for
+	 *
+	 * When a configure event is received, a client should then ack
+	 * it using the ack_configure request to ensure that the compositor
+	 * knows the client has seen the event.
+	 *
+	 * By this point, the state is confirmed, and the next attach
+	 * should contain the buffer drawn for the configure event you are
+	 * acking.
+	 */
+	void xdg_ack_configure(struct wl_client *client,
+			      struct wl_resource *resource,
+			      uint32_t serial){}
+	/**
+	 * set_window_geometry - set the new window geometry
+	 * @x: (none)
+	 * @y: (none)
+	 * @width: (none)
+	 * @height: (none)
+	 *
+	 * The window geometry of a window is its "visible bounds" from
+	 * the user's perspective. Client-side decorations often have
+	 * invisible portions like drop-shadows which should be ignored for
+	 * the purposes of aligning, placing and constraining windows.
+	 *
+	 * The default value is the full bounds of the surface, including
+	 * any subsurfaces. Once the window geometry of the surface is set
+	 * once, it is not possible to unset it, and it will remain the
+	 * same until set_window_geometry is called again, even if a new
+	 * subsurface or buffer is attached.
+	 *
+	 * If responding to a configure event, the window geometry in here
+	 * must respect the sizing negotiations specified by the states in
+	 * the configure event.
+	 */
+	void xdg_set_window_geometry(struct wl_client *client,
+				    struct wl_resource *resource,
+				    int32_t x,
+				    int32_t y,
+				    int32_t width,
+				    int32_t height){}
+	/**
+	 * set_maximized - (none)
+	 */
+	void xdg_set_maximized(struct wl_client *client,
+			      struct wl_resource *resource){}
+	/**
+	 * unset_maximized - (none)
+	 */
+	void xdg_unset_maximized(struct wl_client *client,
+				struct wl_resource *resource){}
+	/**
+	 * set_fullscreen - set the window as fullscreen on a monitor
+	 * @output: (none)
+	 *
+	 * Make the surface fullscreen.
+	 *
+	 * You can specify an output that you would prefer to be
+	 * fullscreen. If this value is NULL, it's up to the compositor to
+	 * choose which display will be used to map this surface.
+	 */
+	void xdg_set_fullscreen(struct wl_client *client,
+			       struct wl_resource *resource,
+			       struct wl_resource *output){}
+	/**
+	 * unset_fullscreen - (none)
+	 */
+	void xdg_unset_fullscreen(struct wl_client *client,
+				 struct wl_resource *resource){}
+	/**
+	 * set_minimized - (none)
+	 */
+	void xdg_set_minimized(struct wl_client *client,
+			      struct wl_resource *resource){
+  }
+const static struct xdg_surface_interface xdgSurfaceInterface = {
+  xdg_destroy,
+  xdg_set_parent,
+  xdg_set_title,
+  xdg_set_app_id,
+  xdg_show_window_menu,
+  xdg_move,
+  xdg_resize,
+  xdg_ack_configure,
+  xdg_set_window_geometry,
+  xdg_set_maximized,
+  xdg_unset_maximized,
+  xdg_set_fullscreen,
+  xdg_unset_fullscreen,
+  xdg_set_minimized
+};
+
 glm::vec3 MotorcarSurfaceNode::dimensions() const
 {
     return m_dimensions;
@@ -570,12 +779,18 @@ wl_resource *MotorcarSurfaceNode::resource() const
     return m_resource;
 }
 
+
 void MotorcarSurfaceNode::configureResource(wl_client *client, uint32_t id)
 {
     m_resource = wl_resource_create(client, &motorcar_surface_interface, motorcar_surface_interface.version, id);
     wl_resource_set_implementation(m_resource, &motorcarSurfaceInterface, this, 0);
     sendTransformToClient();
     requestSize3D(m_dimensions);
+}
+
+void MotorcarSurfaceNode::configureResourceXDG(wl_client *client, uint32_t id) {
+    m_resource = wl_resource_create(client, &xdg_surface_interface, xdg_surface_interface.version, id);
+    wl_resource_set_implementation(m_resource, &xdgSurfaceInterface, this, 0);
 }
 
 

@@ -28,6 +28,8 @@
 #include <assert.h>
 #include <signal.h>
 #include <unistd.h>
+#include <chrono>
+#include <thread>
 
 
 #include <linux/input.h>
@@ -345,7 +347,7 @@ init_gl(struct window *window)
 	    glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     glDisable(GL_CULL_FACE);
-	
+
 
     //draw shaders
 
@@ -407,7 +409,7 @@ init_gl(struct window *window)
 	window->gl.h_aPosition =  glGetAttribLocation(window->gl.colorBlitProgram, "aPosition");
 	window->gl.h_aTexCoord =  glGetAttribLocation(window->gl.colorBlitProgram, "aTexCoord");
 
-	
+
 	if(window->gl.h_aPosition < 0 || window->gl.h_aTexCoord < 0){
        std::cout << "problem with texture blitter shader handles: "
                  << window->gl.h_aPosition
@@ -417,7 +419,7 @@ init_gl(struct window *window)
 
 
 	frag = create_shader(window, blit_depth_frag_shader_text, GL_FRAGMENT_SHADER);
-	
+
 
     window->gl.depthBlitProgram = glCreateProgram();
 	glAttachShader(window->gl.depthBlitProgram, frag);
@@ -456,14 +458,14 @@ init_gl(struct window *window)
 	window->gl.h_aPosition_clipping =  glGetAttribLocation(window->gl.clipProgram, "aPosition");
 	window->gl.h_uMVPMatrix_clipping = glGetUniformLocation(window->gl.clipProgram, "uMVPMatrix");
 
-	
+
 	if(window->gl.h_aPosition_clipping < 0 || window->gl.h_uMVPMatrix_clipping < 0){
        std::cout << "problem with texture blitter shader handles: "
                  << window->gl.h_aPosition_clipping
                  << ", "<< window->gl.h_uMVPMatrix_clipping
                  << std::endl;
     }
-	
+
 
 
 	static const GLfloat verts[8][3]= {
@@ -695,7 +697,7 @@ set_fullscreen(struct window *window, int fullscreen)
 
 
 void set_window_dimensions(struct window *window, const glm::vec3 &new_dimensions){
-	   
+
 	window->dimensions = new_dimensions;
 
 	std::memcpy(window->dimensions_array.data, glm::value_ptr(new_dimensions), window->dimensions_array.size);
@@ -714,8 +716,8 @@ void motorcar_surface_handle_transform_matrix(void *data,
 	struct window *window = (struct window *) data;
 	window->transformMatrix = glm::make_mat4((float *)transform->data);
 }
-	
-	 
+
+
 void motorcar_surface_handle_request_size_3d(void *data,
 				struct motorcar_surface *motorcar_surface,
 				struct wl_array *dimensions)
@@ -737,7 +739,7 @@ create_surface(struct window *window)
 {
 	struct display *display = window->display;
 	EGLBoolean ret;
-	
+
 	window->surface = wl_compositor_create_surface(display->compositor);
 	window->shell_surface = wl_shell_get_shell_surface(display->shell,
 							   window->surface);
@@ -829,12 +831,12 @@ void drawWindowBoundsStencil(struct window *window, struct display *display)
 	        struct viewport textureViewport = textureViewports[i];
 	        glViewport(textureViewport.x, textureViewport.y, textureViewport.width, textureViewport.height);
 
-	       
+
 	        glm::mat4 mvp = vp->projectionMatrix * vp->viewMatrix * modelMatrix;
 	        glUniformMatrix4fv(window->gl.h_uMVPMatrix_clipping, 1, GL_FALSE, glm::value_ptr(mvp));
 	        glDrawElements(GL_TRIANGLES, numElements,GL_UNSIGNED_INT, 0);
     	}
-    	
+
 
     }
 
@@ -862,11 +864,11 @@ void blitStencilBuffer(struct window *window, struct display *display){
 
     	for(int i = 0; i < 2; i++){
 	        struct viewport drawViewport = drawViewports[i];
-	        glBlitFramebuffer(readViewport.x, readViewport.y, readViewport.x + readViewport.width, readViewport.y + readViewport.height, 
+	        glBlitFramebuffer(readViewport.x, readViewport.y, readViewport.x + readViewport.width, readViewport.y + readViewport.height,
 	        					drawViewport.x, drawViewport.y, drawViewport.x + drawViewport.width, drawViewport.y + drawViewport.height,  GL_STENCIL_BUFFER_BIT, GL_NEAREST);
-	       
+
     	}
-    	
+
 
     }
 
@@ -917,7 +919,7 @@ void Box::draw(struct window *window, std::vector<struct viewpoint *> &viewpoint
 	glm::mat4 model =  window->transformMatrix
 						* window_offset
 						* this->transform
-						* glm::rotate(glm::mat4(), (time / 25.0f), glm::vec3(0.0f,1.0f,0.0f)) 
+						* glm::rotate(glm::mat4(), (time / 150.0f), glm::vec3(0.0f,1.0f,0.0f))
 						* glm::scale(glm::mat4(), this->size);
 
 	int i = 0;
@@ -927,7 +929,7 @@ void Box::draw(struct window *window, std::vector<struct viewpoint *> &viewpoint
 
 		glm::mat4 projection = vp->projectionMatrix;
 		glm::mat4 view = vp->viewMatrix;
-		
+
 		glUniformMatrix4fv(window->gl.rotation_uniform, 1, GL_FALSE, glm::value_ptr(projection * view * model));
 
 		glDrawElements(GL_TRIANGLES, 36,GL_UNSIGNED_INT, 0);
@@ -966,12 +968,12 @@ redraw(void *data, struct wl_callback *callback, uint32_t time)
 	 //wl_callback *frame_callback = wl_display_sync(display->display);
 	 wl_callback_add_listener(frame_callback,
 		&frame_listener, window);
-	
+
 
 	if (!window->configured)
 		return;
 
-	
+
 	if (window->frames == 0)
 		window->benchmark_time = time;
 	if (time - window->benchmark_time > (benchmark_interval * 1000)) {
@@ -1002,7 +1004,7 @@ redraw(void *data, struct wl_callback *callback, uint32_t time)
 	}else{
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
-		
+
 
 
 
@@ -1039,14 +1041,14 @@ redraw(void *data, struct wl_callback *callback, uint32_t time)
 
 	    GLuint textures[] = {window->gl.colorBufferTexture, window->gl.depthBufferTexture};
 	    GLuint programs[] = {window->gl.colorBlitProgram, window->gl.depthBlitProgram};
-	    
+
 
 	    for(struct viewpoint *vp : display->viewpoints){
 	    	struct viewport textureViewports[] = {vp->colorViewport, vp->depthViewport};
 	    	for(int i = 0; i < 2; i++){
 	    		glUseProgram(programs[i]);
 	    		glBindTexture(GL_TEXTURE_2D, textures[i]);
-	    		
+
 		    	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		    	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
@@ -1081,7 +1083,7 @@ redraw(void *data, struct wl_callback *callback, uint32_t time)
 
 		        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 	    	}
-	    	
+
 
 	    }
 
@@ -1093,7 +1095,7 @@ redraw(void *data, struct wl_callback *callback, uint32_t time)
 
 	    glUseProgram(0);
 	}
-	
+
 
 
     //printf("geometry: %d, %d\n", window->geometry.width, window->geometry.height);
@@ -1556,8 +1558,8 @@ main(int argc, char **argv)
 
 
 	window.m_box.size = glm::vec3(0.3);
-	window.m_box.transform = glm::mat4(1); 
-	window.m_box.grabTransform = glm::mat4(1); 
+	window.m_box.transform = glm::mat4(1);
+	window.m_box.grabTransform = glm::mat4(1);
 	window.m_box.isGrabbed = false;
 
 	window.display = &display;
@@ -1621,7 +1623,7 @@ main(int argc, char **argv)
 	// 	redraw(&window, NULL, 0);
 	// }
 
-	
+
 	 // wl_callback *frame_callback = wl_surface_frame(window.surface);
 	 // wl_callback_add_listener(frame_callback, &frame_listener, &window);
 
@@ -1637,8 +1639,8 @@ main(int argc, char **argv)
 	 		wl_display_dispatch(display.display);
 	 	//redraw(&window, NULL, 0);
 
-		
-	 	
+
+
 
 	}
 

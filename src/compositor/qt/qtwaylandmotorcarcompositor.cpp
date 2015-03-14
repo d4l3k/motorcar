@@ -268,12 +268,13 @@ void QtWaylandMotorcarCompositor::surfaceMapped()
     QWaylandSurface *surface = qobject_cast<QWaylandSurface *>(sender());
 
     std::cout << "mapped surface: " << surface << std::endl;
+    std::cout << "shell surface: " << surface->hasShellSurface() << std::endl;
 
     QPoint pos;
     //if (!m_surfaces.contains(surface)) {
 
         //surface->setPos(QPoint(0, 0));
-        if (surface->hasShellSurface()) {
+        if (surface->hasShellSurface() || true) {
 
             motorcar::WaylandSurface::SurfaceType surfaceType;
 
@@ -297,7 +298,7 @@ void QtWaylandMotorcarCompositor::surfaceMapped()
                 std::cout << "Warning: qwaylandsurface was mapped but motorcar surface does not exist yet, creating now" <<std::endl;
 //                surfaceCreated(surface);
 //                surfaceNode = this->getSurfaceNode(surface);
-                motorsurface = new QtWaylandMotorcarSurface(surface, this, motorcar::WaylandSurface::SurfaceType::NA);
+                motorsurface = new QtWaylandMotorcarSurface(surface, this, surfaceType);
 
                  m_surfaceMap.insert(std::pair<QWaylandSurface *, QtWaylandMotorcarSurface *>(surface, motorsurface));
 
@@ -495,26 +496,22 @@ void QtWaylandMotorcarCompositor::setCursorSurface(QWaylandSurface *surface, int
 
 QWaylandSurface *QtWaylandMotorcarCompositor::surfaceAt(const QPointF &point, QPointF *local)
 {
-//    motorcar::Geometry::Ray ray = display()->worldRayAtDisplayPosition(glm::vec2(point.x(), point.y()));
-//    motorcar::Geometry::RaySurfaceIntersection *intersection = m_scene->intersectWithSurfaces(ray);
+    motorcar::Geometry::Ray ray = display()->worldRayAtDisplayPosition(glm::vec2(point.x(), point.y()));
+    motorcar::Geometry::RaySurfaceIntersection *intersection = m_scene->intersectWithSurfaces(ray);
 
-//    if(intersection){
-//        //qDebug() << "intersection found between cursor ray and scene graph";
-//        if (local){
-//            *local = QPointF(intersection->surfaceLocalCoordinates.x, intersection->surfaceLocalCoordinates.y);
-//        }
-//        motorcar::WaylandSurface *surface = intersection->surfaceNode->surface();
-//        delete intersection;
+    if(intersection){
+        qDebug() << "intersection found between cursor ray and scene graph";
+        if (local){
+            *local = QPointF(intersection->surfaceLocalCoordinates.x, intersection->surfaceLocalCoordinates.y);
+        }
+        motorcar::WaylandSurface *surface = intersection->surfaceNode->surface();
+        delete intersection;
 
-//        return static_cast<QtWaylandMotorcarSurface *>(surface)->surface();
+        return static_cast<QtWaylandMotorcarSurface *>(surface)->surface();
 
-//    }else{
-//        //qDebug() << "no intersection found between cursor ray and scene graph";
-//        return NULL;
-//    }
-    return NULL;
-
-
+    }else{
+        return NULL;
+    }
 }
 
 
