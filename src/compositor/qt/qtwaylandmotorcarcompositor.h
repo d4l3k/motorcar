@@ -148,6 +148,8 @@ private:
 
     uint32_t m_frames, m_benchmark_time;
 
+    QPointF m_lastPos;
+
 };
 }
 

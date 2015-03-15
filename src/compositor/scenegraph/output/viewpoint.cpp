@@ -144,7 +144,7 @@ float ViewPoint::fov(Display *display)
     float eyeToScreenDistance = glm::abs(glm::dot(cameraToDisplayVector, displayNormal));
 
 
-    return glm::degrees(2.0f * atan(display->dimensions().y / (2.0f * eyeToScreenDistance)));
+    return 70.0f;//glm::degrees(2.0f * atan(display->dimensions().y / (2.0f * eyeToScreenDistance)));
 }
 
 

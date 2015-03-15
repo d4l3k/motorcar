@@ -78,9 +78,10 @@ public:
 
     void ensureKeyboardFocusIsValid(WaylandSurface *oldSurface);
 
+    std::map<WaylandSurface *, WaylandSurfaceNode *> m_surfaceMap;
+
 private:
 
-    std::map<WaylandSurface *, WaylandSurfaceNode *> m_surfaceMap;
     int m_numSurfacesMapped;
     Scene *m_scene;
     Seat *m_defaultSeat;

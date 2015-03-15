@@ -913,7 +913,7 @@ void Box::draw(struct window *window, std::vector<struct viewpoint *> &viewpoint
 	glm::mat4 window_offset = glm::mat4(1);
 
 	if(window->clipping_mode == MOTORCAR_SURFACE_CLIPPING_MODE_PORTAL){
-		window_offset = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -0.25f));
+		window_offset = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.f));
 	}
 
 	glm::mat4 model =  window->transformMatrix

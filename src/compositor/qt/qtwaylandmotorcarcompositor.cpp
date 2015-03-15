@@ -53,6 +53,7 @@
 #include <QCursor>
 #include <QPixmap>
 #include <QScreen>
+#include <QProcess>
 
 #include <iostream>
 
@@ -589,6 +590,7 @@ bool QtWaylandMotorcarCompositor::eventFilter(QObject *obj, QEvent *event)
         QPointF local;
         QMouseEvent *me = static_cast<QMouseEvent *>(event);
         QWaylandSurface *targetSurface = surfaceAt(me->localPos(), &local);
+        m_lastPos = me->localPos();
         if (m_dragKeyIsPressed && targetSurface) {
             m_draggingWindow = targetSurface;
             m_drag_diff = local;
@@ -627,6 +629,16 @@ bool QtWaylandMotorcarCompositor::eventFilter(QObject *obj, QEvent *event)
             QWaylandSurface *targetSurface = surfaceAt(me->localPos(), &local);
             input->sendMouseMoveEvent(targetSurface, local, me->localPos());
         }
+        if(m_dragKeyIsPressed) {
+            double x = me->localPos().x() - m_lastPos.x();
+            double y = me->localPos().y() - m_lastPos.y();
+            motorcar::Display *d = this->scene()->compositor()->display();
+            float angleX = -(float)(x)/200.0f;
+            float angleY = -(float)(y)/200.0f;
+            glm::mat4 controllerTransform = glm::rotate(glm::rotate(d->transform(), angleX, glm::vec3(0, 1, 0)), angleY, glm::vec3(1, 0, 0));
+            d->setTransform(controllerTransform);
+        }
+        m_lastPos = me->localPos();
         break;
     }
     case QEvent::Wheel: {
@@ -639,7 +651,22 @@ bool QtWaylandMotorcarCompositor::eventFilter(QObject *obj, QEvent *event)
         if (ke->key() == Qt::Key_Meta || ke->key() == Qt::Key_Super_L) {
             std::cout << "DRAG KEY" << std::endl;
             m_dragKeyIsPressed = true;
-        }/*else if(ke->key() == Qt::Key_Up){
+        } else if (ke->key() == Qt::Key_Return && m_dragKeyIsPressed) { // Mod - Enter to launch terminal
+            QProcess *process = new QProcess(this);
+            QString program = "weston-terminal";
+            process->startDetached(program, QStringList());
+        } else if (ke->key() == Qt::Key_Tab && m_dragKeyIsPressed) { // Mod - Tab to change focus
+            std::vector<QWaylandSurface *> surfaces;
+
+            std::cout << "WINDOW COUNT " << m_surfaceMap.size() << std::endl;
+
+            std::map<QWaylandSurface *, QtWaylandMotorcarSurface *>::iterator it;
+            for(it = m_surfaceMap.begin(); it != m_surfaceMap.end(); it++) {
+              surfaces.push_back(it->first);
+            }
+
+            input->setKeyboardFocus(surfaces[0]);
+        }/* else if(ke->key() == Qt::Key_Up){
             m_glData->m_cameraNode->setTransform(glm::translate(glm::mat4(1), glm::vec3(0,0,0.001f)) * m_glData->m_cameraNode->transform());
         }else if(ke->key() == Qt::Key_Down){
             m_glData->m_cameraNode->setTransform(glm::translate(glm::mat4(1), glm::vec3(0,0,-0.001f)) * m_glData->m_cameraNode->transform());

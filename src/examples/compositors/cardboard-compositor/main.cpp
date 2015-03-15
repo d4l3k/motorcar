@@ -57,11 +57,38 @@ int main(int argc, char *argv[])
 
 
     std::cout << "Using Default Display" << std::endl;
-    float camToDisplayDistance = 0.1f;
+
+    int HResolution = 1280;
+    int VResolution  = 800 ;
+    float HScreenSize = .14976;
+    float VScreenSize = .0936;
+    float VScreenCenter = VScreenSize/2;
+    float EyeToScreenDistance = 0.041f;
+    float LensSeparationDistance = .064;
+    float InterpupillaryDistance = .0647;
+    glm::vec4 DistortionK = glm::vec4(1, .22, .24, 0);
+    float scaleFactor = 1.25;
+
+    float near = .01f, far = 10.0f;
+
+    float h_meters = HScreenSize / 4.0f - LensSeparationDistance / 2.0f;
+    float h = (4.0f * h_meters) / HScreenSize ;
+
     motorcar::Display *display = new motorcar::Display(context, glm::vec2(0.325f, 0.1f), scene, glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, .0f, 1.25f)));
-    display->addViewpoint(new motorcar::ViewPoint( .01f, 1000.0f, display, display, glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, camToDisplayDistance))));
+    /*display->addViewpoint(new motorcar::ViewPoint( .01f, 1000.0f, display, display, glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, camToDisplayDistance))));
     compositor->setDisplay(display);
-    scene->addDisplay(compositor->display());
+    scene->addDisplay(compositor->display());*/
+
+    motorcar::ViewPoint *lCam = new motorcar::ViewPoint(near, far, display, display,
+                                     glm::translate(glm::mat4(), glm::vec3(-InterpupillaryDistance/2, VScreenSize/2 - VScreenCenter, EyeToScreenDistance)),
+                                     glm::vec4(0.0f,0.0f,.5f,1.0f), glm::vec3(h, 0.0f, 0.0f));
+
+    motorcar::ViewPoint *rCam = new motorcar::ViewPoint(near, far, display, display,
+                                     glm::translate(glm::mat4(), glm::vec3(InterpupillaryDistance/2.0f, VScreenSize/2 - VScreenCenter, EyeToScreenDistance)),
+                                     glm::vec4(.5f,0.0f,.5f,1.0f), glm::vec3(-h, 0.0f, 0.0f));
+
+      display->addViewpoint(lCam);
+      display->addViewpoint(rCam);
 
 
     std::cout << "Starting Compositor "<<std::endl;

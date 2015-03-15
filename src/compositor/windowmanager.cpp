@@ -111,7 +111,6 @@ void WindowManager::destroySurface(WaylandSurface *surface)
     }
 }
 
-
 WaylandSurfaceNode *WindowManager::mapSurface(motorcar::WaylandSurface *surface, WaylandSurface::SurfaceType surfaceType)
 {
 
@@ -208,9 +207,9 @@ WaylandSurfaceNode *WindowManager::mapSurface(motorcar::WaylandSurface *surface,
 //                    //* glm::rotate(glm::mat4(1),  (-1 + m_numSurfacesMapped / 3) * 30.f, glm::vec3(-1, 0, 0))
 //                    * glm::translate(glm::mat4(1), glm::vec3(0,0.0,-1.5f))
 //                    * glm::mat4(1));
-        surfaceNode->setTransform(glm::mat4(1) * glm::rotate(glm::mat4(4), -45.f, glm::vec3(0, 0, 0)));
+        surfaceNode->setTransform(glm::rotate(glm::mat4(1), -45.0f, glm::vec3(0, 0, 1)));
 
-       // surfaceNode->setTransform(glm::mat4());
+        //surfaceNode->setTransform(glm::mat4());
         m_numSurfacesMapped ++;
 
         this->defaultSeat()->setPointerFocus(surfaceNode->surface(), glm::vec2());

@@ -39,7 +39,6 @@
 ****************************************************************************/
 
 #include <motorcar.h>
-#include <sixensemotionsensingsystem.h>
 #include <oculushmd.h>
 
 
@@ -83,6 +82,7 @@ int main(int argc, char *argv[])
 //    motorcar::SoftKineticDepthCamera *ds325 = new motorcar::SoftKineticDepthCamera(scene, cameraTransform);
 
 
+    /*
     motorcar::SixenseMotionSensingSystem *sixense = new motorcar::SixenseMotionSensingSystem(scene);
     if(sixense->isInitialized() && !sixense->baseStations().empty() && !sixense->baseStations().front()->controllers().empty() ){
 
@@ -116,6 +116,7 @@ int main(int argc, char *argv[])
 //        compositor->display()->setParentNode(headController);
 //        compositor->display()->setTransform(glm::translate(glm::mat4(1), glm::vec3(0,-0.25, 0)));
     }
+    */
 
 
 
