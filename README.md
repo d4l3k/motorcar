@@ -1,5 +1,18 @@
-﻿Motorcar
+﻿# CubeVM
+
+CubeVM is a tiling window manager for Wayland written on top of Motorcar. It not only implements tiling, it also extends Motorcar by implementing the xdg-shell spec allowing more applications to work such as weston-terminal. It means that Wayland programs don't have to be refactored to use the motorcar wayland extension.
+
+
+
+
+
+
+
+
+Motorcar
 ========
+
+This is from the motorcar project.
 
 Motorcar is a framework for 3D windowing built on top of Wayland which I originally developed for my Master's thesis at Cal Poly ([pdf](https://github.com/evil0sheep/MastersThesis/blob/master/thesis.pdf?raw=true), [defense slides](https://docs.google.com/presentation/d/1svgGMxxbfmcHy_KuS5Q9hah8PQOsXqvjBKOoMIzW24Y/edit?usp=sharing)). It is designed to provide basic 3D windowing infrastructure that gives 3D applications desktop flexibility in the how their 3D content is drawn while supporting unmodified Wayland applications in the same 3D compositor space, and to do this with the simplest mechanism possible.
 
@@ -23,22 +36,22 @@ Motorcar has significant external dependencies, some of which may need to be bui
 * Mesa
 
 		$ autogen.sh --prefix=$WLD --enable-gles2 --disable-gallium-egl --with-egl-platforms=x11,wayland,drm --enable-gbm --enable-shared-glapi --with-gallium-drivers=r300,r600,swrast,nouveau --enable-glx-tls
-	
+
 
 * Cairo
 
 		$ autogen.sh --prefix=$WLD --enable-xcb=yes --enable-gl=yes -enable-egl=yes
-	
 
 
-Build instructions for QtWayland can be found on the [QtWayland page](http://qt-project.org/wiki/QtWayland), and these cover most everything needed to get build QtWayland. Getting it to work properly with EGL and desktop OpenGL is a little bit tricky, and I have copied my build command below for reference, which I imagine will probably work on most systems, though this is of course not guaranteed. 
+
+Build instructions for QtWayland can be found on the [QtWayland page](http://qt-project.org/wiki/QtWayland), and these cover most everything needed to get build QtWayland. Getting it to work properly with EGL and desktop OpenGL is a little bit tricky, and I have copied my build command below for reference, which I imagine will probably work on most systems, though this is of course not guaranteed.
 
 Below are the hashes of the commits which I am currently using for the Qt dependencies, which I include mainly for reference since they are known to work together. Other combinations may work as well. Please note that qtbase and qtwayland are git submodules of the qt5 repository.
 
-* Qt5: 
+* Qt5:
 	* e198c124d3259dea657fcfa4c9b9b43bcd2d9fd0
 	* The most recent commit might work here but if the version exceeds 5.3.0 you may run into problems with the QtWayland private includes
-* qtbase 
+* qtbase
 	* 625002f7067271b8f03f7bfa13baff6128c72e68
 	* The most recent commit will probably work here
 * qtwayland
@@ -74,18 +87,18 @@ If this gives you trouble you might want to try making and installing QtWayland 
 
 Building Motorcar Itself
 ------------------------
-Motorcar is separated into several components, which are designed to be able to be used together or independently from one another. The Wayland protocol extensions used for 3D windowing and 3D input are specified in [motorcar.xml](https://github.com/evil0sheep/motorcar/blob/stable/src/protocol/motorcar.xml) and the language bingings used by the compositor and clients are generated when those components are compiled. 
+Motorcar is separated into several components, which are designed to be able to be used together or independently from one another. The Wayland protocol extensions used for 3D windowing and 3D input are specified in [motorcar.xml](https://github.com/evil0sheep/motorcar/blob/stable/src/protocol/motorcar.xml) and the language bingings used by the compositor and clients are generated when those components are compiled.
 
-The compositor is built in two steps. The first step builds the Motorcar compositor library which contains the Wayland backend and Qt dependency, and most of the scenegraph and compositing logic. The second step builds the compositor itself, which is a lightweight program that essentially just uses the compositor library to set up the scene and insert devices into the scenegraph. 
+The compositor is built in two steps. The first step builds the Motorcar compositor library which contains the Wayland backend and Qt dependency, and most of the scenegraph and compositing logic. The second step builds the compositor itself, which is a lightweight program that essentially just uses the compositor library to set up the scene and insert devices into the scenegraph.
 
 This allows many compositors to be built with the core windowing infrastructure, and allows developers implementing compositors to add support for their devices or to replace components of the windowing logic (like the window manager) with their own classes without those classes needing to be in the core Motorcar code base (though I am very open to pull requests). It also keeps device specific dependencies out of the core compositor code.
 
 ### Building the Motorcar Compositor Library
 
 Currently the entire compositor library is built with qmake, but eventually I would like to transition to CMake and only use qmake to build the Qt dependent components (since this is a relatively small portion of the code base). To build the motorcar compositor library:
-	
+
 	$ cd path/to/motorcar/repo
-	$ qmake 
+	$ qmake
 	$ make
 
 This will build shared objects in the lib directory (under the repository root directory) which compositors will link against when using the Motorcar compositor library.
@@ -110,7 +123,7 @@ This repository also contains an example client which supports the Motorcar prot
 
 	$ cd path/to/motorcar/repo
 	$ cd src/examples/clients/simple-egl/
-	$ make 
+	$ make
 
 This will build an executable called motorcar-demo-client in the current directory. This client takes several flags, most of which were inherited from weston-simple-egl. The -p flag enables portal clipping mode, rather than the default cuboid clipping mode, and the -d flag disables depth compositing on the 3D window. See [my thesis](https://github.com/evil0sheep/MastersThesis/blob/master/thesis.pdf?raw=true) and my [thesis defense slides](https://docs.google.com/presentation/d/1svgGMxxbfmcHy_KuS5Q9hah8PQOsXqvjBKOoMIzW24Y/edit?usp=sharing) for a conceptual explanation of what this means.
 
