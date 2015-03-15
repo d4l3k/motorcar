@@ -56,6 +56,7 @@
 #include <QProcess>
 
 #include <iostream>
+#include <vector>
 
 #include <QtCompositor/qwaylandinput.h>
 
@@ -233,6 +234,7 @@ QtWaylandMotorcarSurface *QtWaylandMotorcarCompositor::getMotorcarSurface(QWayla
 void QtWaylandMotorcarCompositor::ensureKeyboardFocusSurface(QWaylandSurface *oldSurface)
 {
 //    QWaylandSurface *kbdFocus = defaultInputDevice()->keyboardFocus();
+//    windowFocus = topLevelSurfaces.size() - 1;
 //    if (kbdFocus == oldSurface || !kbdFocus){
 //        motorcar::WaylandSurfaceNode *n = this->getSurfaceNode();
 //        // defaultInputDevice()->setKeyboardFocus(m_surfaces.isEmpty() ? 0 : m_surfaces.last());
@@ -257,6 +259,12 @@ void QtWaylandMotorcarCompositor::surfaceDestroyed(QObject *object)
         if(motorsurface != NULL){
             this->scene()->windowManager()->destroySurface(motorsurface);
             m_surfaceMap.erase (surface);
+
+            for (unsigned i=0; i<topLevelSurfaces.size(); ++i) {
+              if (topLevelSurfaces[i] == surface) {
+                topLevelSurfaces.erase(topLevelSurfaces.begin() + i);
+              }
+            }
         }
 
     }
@@ -392,6 +400,9 @@ void QtWaylandMotorcarCompositor::surfaceCreated(QWaylandSurface *surface)
 
     QtWaylandMotorcarSurface *motorsurface = new QtWaylandMotorcarSurface(surface, this, motorcar::WaylandSurface::SurfaceType::NA);
     m_surfaceMap.insert(std::pair<QWaylandSurface *, QtWaylandMotorcarSurface *>(surface, motorsurface));
+
+    topLevelSurfaces.push_back(surface);
+    windowFocus = topLevelSurfaces.size() - 1;
 
 //    if(surface->hasShellSurface()){
 //        motorcar::WaylandSurfaceNode *surfaceNode = this->scene()->windowManager()->createSurface();
@@ -656,22 +667,23 @@ bool QtWaylandMotorcarCompositor::eventFilter(QObject *obj, QEvent *event)
             process->startDetached(program, QStringList());
             break;
         } else if (ke->key() == Qt::Key_Tab && m_dragKeyIsPressed) { // Mod - Tab to change focus
-            std::vector<QWaylandSurface *> surfaces;
+            std::vector<motorcar::WaylandSurface *> surfaces = this->scene()->windowManager()->getSurfaces();
+            int size = surfaces.size();
+            std::cout << "WINDOW COUNT " << size << " i " << windowFocus << std::endl;
 
-            std::cout << "WINDOW COUNT " << m_surfaceMap.size() << std::endl;
-
-            std::map<QWaylandSurface *, QtWaylandMotorcarSurface *>::iterator it;
-            for(it = m_surfaceMap.begin(); it != m_surfaceMap.end(); it++) {
-              surfaces.push_back(it->first);
-            }
             windowFocus += 1;
-            if (windowFocus > surfaces.size()) {
+            if (windowFocus >= size) {
               windowFocus = 0;
             }
-            if (surfaces.size() > 0) {
-              input->setKeyboardFocus(surfaces[windowFocus]);
-              break;
+            if (size > 0) {
+              //input->setKeyboardFocus(this->scene()->childNodes()[windowFocus]);
+              //input->setMouseFocus(this->scene()->childNodes()[windowFocus], m_lastPos, m_lastPos);
+
+              //this->defaultSeat()->setPointerFocus(surfaces[windowFocus], glm::vec2());
+              this->defaultSeat()->setKeyboardFocus(surfaces[windowFocus]);
+              //this->scene()->windowManager()->ensureKeyboardFocusIsValid(surfaces[windowFocus]);
             }
+            break;
         }/* else if(ke->key() == Qt::Key_Up){
             m_glData->m_cameraNode->setTransform(glm::translate(glm::mat4(1), glm::vec3(0,0,0.001f)) * m_glData->m_cameraNode->transform());
         }else if(ke->key() == Qt::Key_Down){

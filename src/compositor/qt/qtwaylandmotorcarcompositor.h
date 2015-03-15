@@ -152,6 +152,8 @@ private:
 
     int windowFocus;
 
+    std::vector<QWaylandSurface *> topLevelSurfaces;
+
 };
 }
 

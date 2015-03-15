@@ -110,6 +110,18 @@ void WindowManager::destroySurface(WaylandSurface *surface)
 
     }
 }
+std::vector<WaylandSurface *> WindowManager::getSurfaces() {
+    std::vector<WaylandSurface *> surfaces;
+
+    std::map<WaylandSurface *, WaylandSurfaceNode *>::iterator it;
+    for(it = m_surfaceMap.begin(); it != m_surfaceMap.end(); it++) {
+        WaylandSurface * surface = it->first;
+        if (surface->type() != WaylandSurface::SurfaceType::CURSOR) {
+            surfaces.push_back(surface);
+        }
+    }
+    return surfaces;
+}
 
 WaylandSurfaceNode *WindowManager::mapSurface(motorcar::WaylandSurface *surface, WaylandSurface::SurfaceType surfaceType)
 {
