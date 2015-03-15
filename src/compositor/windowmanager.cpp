@@ -207,13 +207,20 @@ WaylandSurfaceNode *WindowManager::mapSurface(motorcar::WaylandSurface *surface,
 //                    //* glm::rotate(glm::mat4(1),  (-1 + m_numSurfacesMapped / 3) * 30.f, glm::vec3(-1, 0, 0))
 //                    * glm::translate(glm::mat4(1), glm::vec3(0,0.0,-1.5f))
 //                    * glm::mat4(1));
-        surfaceNode->setTransform(glm::rotate(glm::mat4(1), -45.0f, glm::vec3(0, 0, 1)));
+        //surfaceNode->setTransform(glm::rotate(glm::mat4(), -45.0f, glm::vec3(0, 0, 1)));
+
+        surfaceNode->setTransform(
+            glm::translate(glm::mat4(), glm::vec3(0,0,1.25))
+            * glm::rotate(glm::mat4(), -.7f * m_numSurfacesMapped, glm::vec3(0, 1, 0))
+            * glm::translate(glm::mat4(), glm::vec3(0,0,-1.3))
+            * glm::rotate(glm::mat4(), -44.91f, glm::vec3(0, 0, 1)));
 
         //surfaceNode->setTransform(glm::mat4());
         m_numSurfacesMapped ++;
-
         this->defaultSeat()->setPointerFocus(surfaceNode->surface(), glm::vec2());
+        this->defaultSeat()->setKeyboardFocus(surfaceNode->surface());
     }
+
 
     //WaylandSurfaceNode *surfaceNode = new WaylandSurfaceNode(surface, parentNode, transform);
 
@@ -243,7 +250,6 @@ void WindowManager::unmapSurface(WaylandSurface *surface)
 
 void WindowManager::sendEvent(const Event &event)
 {
-  std::cout << "WOOF" << std::endl;
     WaylandSurface *focus;
     switch(event.type()){
     case Event::EventType::MOUSE:

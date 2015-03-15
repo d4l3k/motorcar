@@ -624,12 +624,7 @@ bool QtWaylandMotorcarCompositor::eventFilter(QObject *obj, QEvent *event)
         if (m_draggingWindow) {
             m_draggingWindow->setPos(me->localPos() - m_drag_diff);
             //m_renderScheduler.start(0);
-        } else {
-            QPointF local;
-            QWaylandSurface *targetSurface = surfaceAt(me->localPos(), &local);
-            input->sendMouseMoveEvent(targetSurface, local, me->localPos());
-        }
-        if(m_dragKeyIsPressed) {
+        } else if(m_dragKeyIsPressed && m_lastPos.x() != 0) {
             double x = me->localPos().x() - m_lastPos.x();
             double y = me->localPos().y() - m_lastPos.y();
             motorcar::Display *d = this->scene()->compositor()->display();
@@ -637,6 +632,10 @@ bool QtWaylandMotorcarCompositor::eventFilter(QObject *obj, QEvent *event)
             float angleY = -(float)(y)/200.0f;
             glm::mat4 controllerTransform = glm::rotate(glm::rotate(d->transform(), angleX, glm::vec3(0, 1, 0)), angleY, glm::vec3(1, 0, 0));
             d->setTransform(controllerTransform);
+        } else {
+            QPointF local;
+            QWaylandSurface *targetSurface = surfaceAt(me->localPos(), &local);
+            input->sendMouseMoveEvent(targetSurface, local, me->localPos());
         }
         m_lastPos = me->localPos();
         break;
@@ -655,6 +654,7 @@ bool QtWaylandMotorcarCompositor::eventFilter(QObject *obj, QEvent *event)
             QProcess *process = new QProcess(this);
             QString program = "weston-terminal";
             process->startDetached(program, QStringList());
+            break;
         } else if (ke->key() == Qt::Key_Tab && m_dragKeyIsPressed) { // Mod - Tab to change focus
             std::vector<QWaylandSurface *> surfaces;
 
@@ -664,8 +664,14 @@ bool QtWaylandMotorcarCompositor::eventFilter(QObject *obj, QEvent *event)
             for(it = m_surfaceMap.begin(); it != m_surfaceMap.end(); it++) {
               surfaces.push_back(it->first);
             }
-
-            input->setKeyboardFocus(surfaces[0]);
+            windowFocus += 1;
+            if (windowFocus > surfaces.size()) {
+              windowFocus = 0;
+            }
+            if (surfaces.size() > 0) {
+              input->setKeyboardFocus(surfaces[windowFocus]);
+              break;
+            }
         }/* else if(ke->key() == Qt::Key_Up){
             m_glData->m_cameraNode->setTransform(glm::translate(glm::mat4(1), glm::vec3(0,0,0.001f)) * m_glData->m_cameraNode->transform());
         }else if(ke->key() == Qt::Key_Down){

@@ -150,6 +150,8 @@ private:
 
     QPointF m_lastPos;
 
+    int windowFocus;
+
 };
 }
 
